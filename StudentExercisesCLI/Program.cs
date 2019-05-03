@@ -58,7 +58,13 @@ namespace StudentExercisesCLI
             instructors = repository.GetInstructors();
             exercises = repository.GetExercises();
 
-            repository.AssignExercise(students[1], exercises[1], instructors[1]);
+            repository.AssignExercise(students[1], exercises[6], instructors[1]);
+            Pause();
+
+            //Find all the students in the database. Include each student's cohort AND each student's list of exercises.
+            List<Student> studentsWithExercisesAndCohort = repository.GetStudentExercises();
+            Report.PrintStudentExerciseReport("All Students with Cohort and Exercises", studentsWithExercisesAndCohort);
+            Pause();
         }
         //steve's stop-to-read-output code
         public static void Pause()

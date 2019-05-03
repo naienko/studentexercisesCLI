@@ -13,6 +13,6 @@ namespace StudentExercisesCLI.Models
         public int _cohortId { get; set; }
         public Cohort _cohort;
 
-        public List<Exercise> Exercises { get; private set; } = new List<Exercise>();
+        public List<Exercise> Exercises { get; set; } = new List<Exercise>();
     }
 }

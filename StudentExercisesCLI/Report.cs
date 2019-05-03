@@ -29,5 +29,18 @@ namespace StudentExercisesCLI
                 }
             }
         }
+
+        public static void PrintStudentExerciseReport(string title, List<Student> students)
+        {
+            Console.WriteLine($"{title}");
+            foreach (Student s in students)
+            {
+                Console.WriteLine($"{s._firstname} {s._lastname} is in {s._cohort.Name}. They are working on");
+                foreach (Exercise e in s.Exercises)
+                {
+                    Console.WriteLine($"        {e.Title} in {e.Language}");
+                }
+            }
+        }
     }
 }

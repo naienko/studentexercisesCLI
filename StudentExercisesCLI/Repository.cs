@@ -1,6 +1,7 @@
 ﻿using StudentExercisesCLI.Models;
 using System.Data.SqlClient;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace StudentExercisesCLI
 {
@@ -265,7 +266,7 @@ namespace StudentExercisesCLI
                             _cohortId = CohortId
                         };
 
-                    students.Add(student);
+                        students.Add(student);
                     }
 
                     reader.Close();
@@ -293,6 +294,88 @@ namespace StudentExercisesCLI
                     cmd.Parameters.Add(new SqlParameter("@instructorid", instructor.Id));
 
                     cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public List<Student> GetStudentExercises()
+        {
+            //get from database
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"SELECT se.Id, s.Id AS StudentId, s.FirstName, s.LastName, 
+                        e.Id AS ExerciseId, e.Title, e.Language, c.Id AS CohortId, c.Designation 
+                            FROM StudentExercise se 
+                            JOIN Student s ON se.StudentId = s.Id
+                            JOIN Instructor i ON se.InstructorId = i.Id
+                            JOIN Exercise e ON se.ExerciseId = e.Id
+                            JOIN Cohort c ON s.CohortId = c.Id";
+
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    List<Student> students = new List<Student>();
+
+                    while (reader.Read())
+                    {
+                        int idColumnPosition = reader.GetOrdinal("Id");
+                        int IdValue = reader.GetInt32(idColumnPosition);
+                        int StudentId = reader.GetInt32(reader.GetOrdinal("StudentId"));
+                        string FirstName = reader.GetString(reader.GetOrdinal("FirstName"));
+                        string LastName = reader.GetString(reader.GetOrdinal("LastName"));
+                        int ExerciseId = reader.GetInt32(reader.GetOrdinal("ExerciseId"));
+                        string ExerciseTitle = reader.GetString(reader.GetOrdinal("Title"));
+                        string ExerciseLanguage = reader.GetString(reader.GetOrdinal("Language"));
+                        int CohortId = reader.GetInt32(reader.GetOrdinal("CohortId"));
+                        string CohortName = reader.GetString(reader.GetOrdinal("Designation"));
+
+                        Student student = new Student
+                        {
+                            Id = StudentId,
+                            _firstname = FirstName,
+                            _lastname = LastName,
+                            _cohort = new Cohort
+                            {
+                                Id = CohortId,
+                                Name = CohortName
+                            },
+                            Exercises = new List<Exercise>()
+                        };
+                        Exercise exercise = new Exercise
+                        {
+                            Id = ExerciseId,
+                            Language = ExerciseLanguage,
+                            Title = ExerciseTitle
+                        };
+
+                        if (students.Count != 0)
+                        {
+                            IEnumerable<Student> currentStudent = students.Where(s => s.Id == StudentId);
+                            if (currentStudent.Any() == true)
+                            {
+                                foreach (Student s in currentStudent)
+                                {
+                                    s.Exercises.Add(exercise);
+                                }
+                            } else
+                            {
+                                student.Exercises.Add(exercise);
+                                students.Add(student);
+                            }
+                        }
+                        else
+                        {
+                            student.Exercises.Add(exercise);
+                            students.Add(student);
+                        }
+                    }
+
+                    reader.Close();
+
+                    return students;
                 }
             }
         }
