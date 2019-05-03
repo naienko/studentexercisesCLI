@@ -360,7 +360,8 @@ namespace StudentExercisesCLI
                                 {
                                     s.Exercises.Add(exercise);
                                 }
-                            } else
+                            }
+                            else
                             {
                                 student.Exercises.Add(exercise);
                                 students.Add(student);
@@ -378,6 +379,81 @@ namespace StudentExercisesCLI
                     return students;
                 }
             }
+        }
+
+        public void AssignCohortExercise(Cohort cohort, Exercise exercise)
+        {
+            List<Student> studentsWithExercisesAndCohort = GetStudentExercises();
+
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    List<Student> cohortStudents = studentsWithExercisesAndCohort.Where(s => s._cohort.Name == cohort.Name).ToList();
+
+                    //get the db ID of the Exercise
+                    cmd.CommandText = $"SELECT Id AS ExerciseId FROM Exercise WHERE {exercise.Title} = Title";
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    int ExerciseId = 0;
+
+                    while (reader.Read())
+                    {
+                        int idColumnPosition = reader.GetOrdinal("Id");
+                        int IdValue = reader.GetInt32(idColumnPosition);
+                        ExerciseId = reader.GetInt32(reader.GetOrdinal("ExerciseId"));
+                    }
+
+                    reader.Close();
+
+                    //get the db ID of the Cohort
+                    cmd.CommandText = $"SELECT c.Id AS CohortId FROM Cohort WHERE {cohort.Name} = Designation";
+                    SqlDataReader reader2 = cmd.ExecuteReader();
+
+                    int CohortId = 0;
+
+                    while (reader2.Read())
+                    {
+                        int idColumnPosition = reader.GetOrdinal("Id");
+                        int IdValue = reader.GetInt32(idColumnPosition);
+                        CohortId = reader.GetInt32(reader.GetOrdinal("CohortId"));
+                    }
+
+                    //get the db ID of the Instructor of the Cohort
+                    cmd.CommandText = $"SELECT i.Id AS InstructorId FROM Instructor i WHERE {cohort.Id} = {CohortId}";
+                    SqlDataReader reader3 = cmd.ExecuteReader();
+
+                    int InstructorId = 0;
+
+                    while (reader3.Read())
+                    {
+                        int idColumnPosition = reader.GetOrdinal("Id");
+                        int IdValue = reader.GetInt32(idColumnPosition);
+                        InstructorId = reader.GetInt32(reader.GetOrdinal("InstructorId"));
+                    }
+                    //loop through the list of Students in the Cohort
+                    foreach (Student s in cohortStudents)
+                    {
+                        //pull out the Exercise that matches the variable exercise in the Student's List
+                        IEnumerable<Exercise> currentExercise = s.Exercises.Where(e => e.Id == ExerciseId);
+                        //check to see if that actually grabbed anything
+                        if (currentExercise.Any() == false)
+                        {
+                            //if not, INSERT exercise
+                            cmd.CommandText = $@"INSERT INTO StudentExercise (StudentId, ExerciseId, InstructorId) 
+                                        VALUES (@studentid, @exerciseid, @instructorid)";
+                            cmd.Parameters.Add(new SqlParameter("@studentid", s.Id));
+                            cmd.Parameters.Add(new SqlParameter("@exerciseid", ExerciseId));
+                            cmd.Parameters.Add(new SqlParameter("@instructorid", InstructorId));
+
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                }
+            }
+
         }
     }
 }

@@ -65,6 +65,22 @@ namespace StudentExercisesCLI
             List<Student> studentsWithExercisesAndCohort = repository.GetStudentExercises();
             Report.PrintStudentExerciseReport("All Students with Cohort and Exercises", studentsWithExercisesAndCohort);
             Pause();
+
+            //Write a method in the Repository class that accepts an Exercise and a Cohort and assigns that exercise to 
+            //each student in the cohort IF and ONLY IF the student has not already been assigned the exercise.
+            Exercise exercise = new Exercise()
+            {
+                Title = "Personal Website"
+            };
+            Cohort cohort = new Cohort()
+            {
+                Name = "Cohort 30"
+            };
+            repository.AssignCohortExercise(cohort, exercise);
+
+            studentsWithExercisesAndCohort = repository.GetStudentExercises();
+            Report.PrintStudentExerciseReport("All Students with Cohort and Exercises", studentsWithExercisesAndCohort);
+            Pause();
         }
         //steve's stop-to-read-output code
         public static void Pause()
